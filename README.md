@@ -1,4 +1,4 @@
-# CKA Killercoda Labs (31 questions + 2 mock exams)
+# CKA Killercoda Labs (31 questions + 3 mock exams)
 
 Hands-on labs built from the 31 exercises and the two mock exams in
 [norbutlepcha25/CKA-Certified-Kubernetes-Administrator](https://github.com/norbutlepcha25/CKA-Certified-Kubernetes-Administrator).
@@ -6,7 +6,7 @@ Each question has a lab setup, the task text, solution notes and an automatic ch
 They are written for the Killercoda CKA playground (`controlplane` + `node01`, logged in as root).
 
 - `lab.sh` runs the 31 practice labs (below).
-- `mock.sh` runs the two timed mock exams (see [Mock exams](#mock-exams) and `CKA-Mock-Exams.md`).
+- `mock.sh` runs the three timed mock exams (see [Mock exams](#mock-exams), `CKA-Mock-Exams.md` and `CKA-Mock-Exam-03.md`).
 
 ## Get the labs into Killercoda
 
@@ -128,6 +128,35 @@ Use a fresh Killercoda session for each exam: some questions change the control 
 | 2 · Q05 | **Enables API server audit logging** (restarts the API server, ~1-2 min); `cleanup` restores the clean manifest copy (shared with 1 · Q08) |
 | 2 · Q10 | Your answer renews the control plane certificates and restarts the static pods (can't be undone, harmless) |
 | 2 · Q11 | Your answer drains node01; the question ends with uncordoning it |
+
+### Mock exam 3 (Killer Shell style)
+
+`Mock-Exam-03/` has 20 questions modelled on the Killer Shell CKA simulator topics (17 + 3 "preview"
+questions): kubeconfig contexts, Helm + cert-manager CRDs, StatefulSet scaling, QoS classes,
+Kustomize + HPA, PV/PVC, `kubectl top`, kubeadm upgrade + join, API access from a Pod, RBAC,
+DaemonSet / one-Pod-per-node scheduling, Gateway API HTTPRoute, certificate expiry, NetworkPolicy,
+CoreDNS, crictl, etcd info, kube-proxy iptables and changing the Service CIDR. The tasks are rewritten
+for Killercoda; `CKA-Mock-Exam-03.md` lists them all with collapsible solutions.
+
+```bash
+./mock.sh 3 start            # 18 questions set up; Q08 and Q20 are on demand
+./mock.sh 3 score            # pass mark 66% (14/20)
+```
+
+Answer files go in `/root/mock3/`.
+
+| Exam · Q | What the setup does / session impact |
+|---|---|
+| 3 · Q02 | Installs Helm if missing and adds the jetstack repo; your answer installs cert-manager (`cleanup` removes it and its CRDs) |
+| 3 · Q05, Q07 | Install metrics-server if missing |
+| 3 · Q08 | **Removes node01 from the cluster** (kubeadm reset) and downgrades its kubelet/kubectl one minor version. On demand: `./mock.sh 3 8`. `cleanup` re-joins node01 on the control plane version |
+| 3 · Q13 | Installs Envoy Gateway v1.5.4 + GatewayClass `eg` (NodePort, same as practice lab 15), adds `r500.gateway` to `/etc/hosts` |
+| 3 · Q15 | Needs a CNI that enforces NetworkPolicy (the Killercoda playground does) |
+| 3 · Q16 | Saves the original Corefile; `cleanup` restores it |
+| 3 · Q20 | **Changes the Service CIDR** (restarts kube-apiserver and kube-controller-manager). On demand: `./mock.sh 3 20`. `cleanup` restores both manifests; use a fresh session afterwards |
+
+Kubernetes 1.33+ is needed for Q20 (ServiceCIDR API). The checkers have not yet been run end to end on
+Killercoda - report a wrong [FAIL] as an issue.
 
 ### Changes from the original mock exams
 

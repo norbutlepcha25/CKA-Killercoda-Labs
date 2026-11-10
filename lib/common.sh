@@ -156,3 +156,51 @@ oneof(){ local d="$1" a="$2" v; shift 2; for v in "$@"; do [ "$a" = "$v" ] && { 
 
 # filecontent <path> -> file content with surrounding whitespace removed
 filecontent(){ [ -f "$1" ] && tr -d '\r' < "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' | sed '/^$/d'; }
+
+# ensure_envoy_gateway -> Envoy Gateway v1.5.4 + GatewayClass "eg" whose proxies use a NodePort Service
+# (same install as practice lab Q15; used by mock exam 3 Q13)
+ensure_envoy_gateway(){
+  local EGV=v1.5.4
+  if ! kubectl get deploy envoy-gateway -n envoy-gateway-system >/dev/null 2>&1; then
+    echo "Installing Envoy Gateway $EGV (Gateway API CRDs + controller) ..."
+    kubectl apply --server-side --force-conflicts -f "https://github.com/envoyproxy/gateway/releases/download/$EGV/install.yaml" >/dev/null
+  fi
+  kubectl wait --for=condition=Available deploy/envoy-gateway -n envoy-gateway-system --timeout=300s >/dev/null
+  cat <<'YAML' | kubectl apply -f - >/dev/null
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: nodeport-proxy
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        type: NodePort
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: eg
+spec:
+  controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  parametersRef:
+    group: gateway.envoyproxy.io
+    kind: EnvoyProxy
+    name: nodeport-proxy
+    namespace: envoy-gateway-system
+YAML
+  kubectl wait --for=condition=Accepted gatewayclass/eg --timeout=120s >/dev/null 2>&1
+}
+
+# same_time "description" "<date string>" "<date string>" -> PASS if both parse to times <= 60s apart
+same_time(){
+  local a b
+  a=$(date -d "$2" +%s 2>/dev/null); b=$(date -d "$3" +%s 2>/dev/null)
+  if [ -n "$a" ] && [ -n "$b" ] && [ $(( a > b ? a - b : b - a )) -le 60 ]; then pass "$1"
+  else fail "$1 (got '$2', expected '$3')"; fi
+}
+
+# in_cidr12 <ip> <first-octet> -> succeeds if ip is inside <first-octet>.96.0.0/12
+in_cidr12(){ local a b c d; IFS=. read -r a b c d <<< "$1"; [ "$a" = "$2" ] && [ -n "$b" ] && [ "$b" -ge 96 ] && [ "$b" -le 111 ]; }

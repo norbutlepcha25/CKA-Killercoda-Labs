@@ -1,5 +1,5 @@
 #!/bin/bash
-# CKA Killercoda mock exams - runner (15 questions, 120 minutes each)
+# CKA Killercoda mock exams - runner (15-20 questions, 120 minutes each)
 #   ./mock.sh list                         list the mock exams and their questions
 #   ./mock.sh <E> start [minutes]          reset + set up every question of exam E and start the clock
 #   ./mock.sh <E> questions                print all questions of exam E
@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$ROOT/lib/common.sh"
 usage(){ sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
-title(){ sed -n '1s/^# Mock Exam 0[0-9] - //p' "$1/Question.bash"; }
+title(){ sed -n '1s/^# Mock Exam [0-9][0-9] - //p' "$1/Question.bash"; }
 
 if [ "$1" = "list" ] || [ -z "$1" ]; then
   for X in "$ROOT"/Mock-Exam-*; do
@@ -79,7 +79,8 @@ case "${2:-}" in
       else printf "  ${RED}[FAIL]${NC} %s  (%s)\n" "$(title "$d")" "${res:-not checked}"; fi
     done
     PCT=$(( OK * 100 / N ))
-    echo; echo "Score: $OK/$N ($PCT%) - passing is 66% (10/15)."
+    NEED=$(( (66 * N + 99) / 100 ))
+    echo; echo "Score: $OK/$N ($PCT%) - passing is 66% ($NEED/$N)."
     [ $PCT -ge 66 ] && echo -e "${GREEN}PASSED${NC}" || echo -e "${RED}NOT PASSED${NC}"
     echo "Details for one question: ./mock.sh $EN <Q> validate" ;;
   solutions) for d in "$EX"/Q*; do echo "# ===== $(title "$d")"; cat "$d/SolutionNotes.bash"; echo; done ;;
