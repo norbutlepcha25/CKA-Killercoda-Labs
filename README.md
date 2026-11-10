@@ -7,6 +7,7 @@ They are written for the Killercoda CKA playground (`controlplane` + `node01`, l
 
 - `lab.sh` runs the 31 practice labs (below).
 - `mock.sh` runs the three timed mock exams (see [Mock exams](#mock-exams), `CKA-Mock-Exams.md` and `CKA-Mock-Exam-03.md`).
+- [GUIDE.md](GUIDE.md) has the setup steps and all 61 questions with collapsible solutions in one file.
 
 ## Get the labs into Killercoda
 
